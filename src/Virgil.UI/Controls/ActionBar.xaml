@@ -1,0 +1,13 @@
+<UserControl x:Class="Virgil.UI.Controls.ActionBar"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+  <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+    <Button FontSize="16" Padding="16,8" MinHeight="36" Style="{StaticResource HoloButton}" Content="Scan"   Command="{Binding ScanCmd}"/>
+    <Button FontSize="16" Padding="16,8" MinHeight="36" Style="{StaticResource HoloButton}" Content="Clean"  Command="{Binding CleanCmd}"/>
+    <Button FontSize="16" Padding="16,8" MinHeight="36" Style="{StaticResource HoloButton}" Content="Update" Command="{Binding UpdateCmd}"/>
+    <ToggleButton Content="Surveillance"
+                IsChecked="{Binding IsChatterEnabled, Mode=TwoWay}"
+                Margin="8,0,0,0" MinHeight="36" Padding="16,8"/>
+</StackPanel>
+</UserControl>
+

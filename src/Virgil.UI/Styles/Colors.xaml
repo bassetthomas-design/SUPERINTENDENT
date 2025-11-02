@@ -1,0 +1,27 @@
+<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+  <!-- Palette sombre holographique -->
+  <Color x:Key="Bg0">#0F1116</Color>
+  <Color x:Key="Bg1">#151824</Color>
+  <Color x:Key="Panel">#171B28</Color>
+  <Color x:Key="Line">#263042</Color>
+
+  <Color x:Key="Accent">#5BD1F5</Color>   <!-- neutre -->
+  <Color x:Key="AccentHappy">#77FFA8</Color>
+  <Color x:Key="AccentBusy">#5BD1F5</Color>
+  <Color x:Key="AccentWarn">#FFB020</Color>
+  <Color x:Key="AccentError">#FF4477</Color>
+
+  <SolidColorBrush x:Key="Brush.Bg" Color="{StaticResource Bg0}"/>
+  <SolidColorBrush x:Key="Brush.BgPanel" Color="{StaticResource Panel}"/>
+  <SolidColorBrush x:Key="Brush.Line" Color="{StaticResource Line}"/>
+
+  <SolidColorBrush x:Key="Brush.Accent" Color="{StaticResource Accent}"/>
+  <SolidColorBrush x:Key="Brush.AccentHappy" Color="{StaticResource AccentHappy}"/>
+  <SolidColorBrush x:Key="Brush.AccentBusy" Color="{StaticResource AccentBusy}"/>
+  <SolidColorBrush x:Key="Brush.AccentWarn" Color="{StaticResource AccentWarn}"/>
+  <SolidColorBrush x:Key="Brush.AccentError" Color="{StaticResource AccentError}"/>
+
+  <SolidColorBrush x:Key="Brush.Text" Color="#E7ECF3"/>
+  <SolidColorBrush x:Key="Brush.Sub"  Color="#A6B3C8"/>
+</ResourceDictionary>

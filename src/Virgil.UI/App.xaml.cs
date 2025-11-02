@@ -1,3 +1,4 @@
+using Virgil.UI.Services;
 using System.Windows;
 using Virgil.Core;
 
@@ -12,3 +13,6 @@ namespace Virgil.UI
         }
     }
 }
+
+
+
