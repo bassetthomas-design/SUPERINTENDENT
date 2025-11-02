@@ -1,0 +1,16 @@
+namespace Virgil.Core
+{
+    // Les types de commandes que l'Agent comprend
+    public enum CommandType
+    {
+        Clean = 0,
+        UpdateAll = 1
+        // Ajouter ici d'autres cases si besoin
+    }
+
+    // Déclaration primaire UNIQUE (et partial pour extensions)
+    public readonly partial record struct CommandRequest(string Id, CommandType Type);
+
+    // Résultat renvoyé par l'Agent (schema minimal compatible avec tes logs)
+    public readonly record struct CommandResult(bool Success, CommandType Kind, string Message);
+}

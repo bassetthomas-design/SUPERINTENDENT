@@ -1,0 +1,242 @@
+using System;
+using System.Diagnostics;
+using System.IO;
+using System.Linq;
+using System.Text.Json;
+using System.Threading;
+using System.Threading.Tasks;
+using Serilog;
+using Virgil.Core;
+
+public sealed class CommandWatcher
+{
+    private readonly string _baseDir;
+    private readonly string _cmdDir;
+
+    public CommandWatcher(string baseDir)
+    {
+        _baseDir = baseDir;
+        _cmdDir  = Path.Combine(_baseDir, "ipc", "commands");
+        Directory.CreateDirectory(_cmdDir);
+    }
+
+    public void Start(CancellationToken ct)
+    {
+        Task.Run(async () =>
+        {
+            Log.Information("Command watcher started: {dir}", _cmdDir);
+
+            while (!ct.IsCancellationRequested)
+            {
+                try
+                {
+                    var files = Directory.EnumerateFiles(_cmdDir, "*.json").ToList();
+
+                    foreach (var f in files)
+                    {
+                        CommandRequest? req = null;
+                        try
+                        {
+                            var json = File.ReadAllText(f);
+                            req = JsonSerializer.Deserialize<CommandRequest>(json);
+                        }
+                        catch (Exception ex)
+                        {
+                            Log.Error(ex, "Bad command file {file}", f);
+                        }
+
+                        if (req != null)
+                        {
+                            var res = await ExecuteAsync(req, ct);
+                            var resPath = Path.Combine(Path.GetDirectoryName(f)!, Path.GetFileNameWithoutExtension(f) + ".result.json");
+                            File.WriteAllText(resPath, JsonSerializer.Serialize(res));
+                        }
+
+                        try { File.Delete(f); } catch { /* ignore */ }
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Log.Error(ex, "Command polling error");
+                }
+
+                await Task.Delay(1000, ct);
+            }
+        }, ct);
+    }
+
+    private async Task<CommandResult> ExecuteAsync(CommandRequest req, CancellationToken ct)
+    {
+        try
+        {
+            return req.Type switch
+            {
+                VirgilCommandType.Clean     => await DoCleanupAsync(req, ct),
+                VirgilCommandType.UpdateAll => await DoUpdateAllAsync(req, ct),
+                _ => new CommandResult(req.CorrelationId, false, "Unknown command", DateTime.UtcNow)
+            };
+        }
+        catch (Exception ex)
+        {
+            Log.Error(ex, "Execute command failed: {type}", req.Type);
+            return new CommandResult(req.CorrelationId, false, ex.Message, DateTime.UtcNow);
+        }
+    }
+
+    // === CLEANUP réel (async via Task.Run pour ne pas bloquer) ===
+    private async Task<CommandResult> DoCleanupAsync(CommandRequest req, CancellationToken ct)
+    {
+        return await Task.Run(() =>
+        {
+            Log.Information("CLEANUP started (real)");
+            int files = 0; long bytes = 0;
+
+            void DeleteIn(string path)
+            {
+                try
+                {
+                    if (!Directory.Exists(path)) return;
+
+                    foreach (var f in Directory.EnumerateFiles(path, "*", SearchOption.TopDirectoryOnly))
+                    {
+                        try
+                        {
+                            var fi = new FileInfo(f);
+                            var len = fi.Length;
+                            File.SetAttributes(f, FileAttributes.Normal);
+                            File.Delete(f);
+                            files++;
+                            bytes += (long)len;
+                        }
+                        catch { }
+                    }
+
+                    foreach (var d in Directory.EnumerateDirectories(path))
+                    {
+                        try { Directory.Delete(d, true); }
+                        catch { }
+                    }
+                }
+                catch { }
+            }
+
+            // Temp/Prefetch
+            DeleteIn(Path.GetTempPath());
+            DeleteIn(@"C:\Windows\Temp");
+            DeleteIn(@"C:\Windows\Prefetch");
+
+            var local   = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
+            var roaming = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
+            void DelIfExists(string p) { if (Directory.Exists(p)) DeleteIn(p); }
+
+            // Edge
+            try {
+                var edgeRoot = Path.Combine(local, @"Microsoft\Edge\User Data");
+                if (Directory.Exists(edgeRoot))
+                    foreach (var d in Directory.EnumerateDirectories(edgeRoot)) {
+                        DelIfExists(Path.Combine(d, "Cache"));
+                        DelIfExists(Path.Combine(d, "Code Cache"));
+                    }
+            } catch {}
+
+            // Chrome
+            try {
+                var chromeRoot = Path.Combine(local, @"Google\Chrome\User Data");
+                if (Directory.Exists(chromeRoot))
+                    foreach (var d in Directory.EnumerateDirectories(chromeRoot)) {
+                        DelIfExists(Path.Combine(d, "Cache"));
+                        DelIfExists(Path.Combine(d, @"Service Worker\CacheStorage"));
+                        DelIfExists(Path.Combine(d, "Code Cache"));
+                    }
+            } catch {}
+
+            // Brave
+            try {
+                var braveRoot = Path.Combine(local, @"BraveSoftware\Brave-Browser\User Data");
+                if (Directory.Exists(braveRoot))
+                    foreach (var d in Directory.EnumerateDirectories(braveRoot)) {
+                        DelIfExists(Path.Combine(d, "Cache"));
+                        DelIfExists(Path.Combine(d, "Code Cache"));
+                    }
+            } catch {}
+
+            // Vivaldi
+            try {
+                var vivaldiRoot = Path.Combine(local, @"Vivaldi\User Data");
+                if (Directory.Exists(vivaldiRoot))
+                    foreach (var d in Directory.EnumerateDirectories(vivaldiRoot)) {
+                        DelIfExists(Path.Combine(d, "Cache"));
+                        DelIfExists(Path.Combine(d, "Code Cache"));
+                    }
+            } catch {}
+
+            // Opera / Opera GX
+            DelIfExists(Path.Combine(roaming, @"Opera Software\Opera Stable\Cache"));
+            DelIfExists(Path.Combine(roaming, @"Opera Software\Opera Stable\Code Cache"));
+            DelIfExists(Path.Combine(roaming, @"Opera Software\Opera GX Stable\Cache"));
+            DelIfExists(Path.Combine(roaming, @"Opera Software\Opera GX Stable\Code Cache"));
+
+            // Firefox
+            var ffProf = Path.Combine(roaming, @"Mozilla\Firefox\Profiles");
+            if (Directory.Exists(ffProf))
+            {
+                foreach (var d in Directory.EnumerateDirectories(ffProf))
+                {
+                    DelIfExists(Path.Combine(d, "cache2"));
+                    DelIfExists(Path.Combine(d, "startupCache"));
+                }
+            }
+
+            TryRunPwsh("Clear-RecycleBin -Force");
+
+            Log.Information("CLEANUP done: {files} files, {mb} MB", files, bytes / 1_000_000);
+            return new CommandResult(req.CorrelationId, true, $"Cleanup OK: ~{bytes/1_000_000} MB libérés", DateTime.UtcNow);
+        }, ct);
+    }
+
+    // === MISES À JOUR réelles (async via Task.Run) ===
+    private async Task<CommandResult> DoUpdateAllAsync(CommandRequest req, CancellationToken ct)
+    {
+        return await Task.Run(() =>
+        {
+            Log.Information("UPDATE started (real)");
+
+            TryRun("winget", "upgrade --all --include-unknown --silent --accept-package-agreements --accept-source-agreements", wait:true);
+            TryRunPwsh("Update-MpSignature");
+            TryRunPwsh("Start-MpScan -ScanType FullScan");
+
+            TryRun("UsoClient.exe", "StartScan",    wait:true);
+            TryRun("UsoClient.exe", "StartDownload",wait:true);
+            TryRun("UsoClient.exe", "StartInstall", wait:true);
+
+            Log.Information("UPDATE done");
+            return new CommandResult(req.CorrelationId, true, "Updates triggered (winget/Defender/WU)", DateTime.UtcNow);
+        }, ct);
+    }
+
+    // === helpers ===
+    private static void TryRun(string file, string args, bool wait=false)
+    {
+        try
+        {
+            using var p = new Process();
+            p.StartInfo.FileName = file;
+            p.StartInfo.Arguments = args;
+            p.StartInfo.UseShellExecute = false;
+            p.StartInfo.CreateNoWindow = true;
+            p.StartInfo.RedirectStandardOutput = true;
+            p.StartInfo.RedirectStandardError  = true;
+            p.Start();
+            if (wait) p.WaitForExit();
+        }
+        catch (Exception ex)
+        {
+            Log.Error(ex, "Failed: {file} {args}", file, args);
+        }
+    }
+
+    private static void TryRunPwsh(string command)
+    {
+        TryRun("powershell.exe", $"-NoProfile -ExecutionPolicy Bypass -Command {command}", wait:true);
+    }
+}

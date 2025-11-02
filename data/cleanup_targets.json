@@ -1,0 +1,29 @@
+{
+  "groups": [
+    {
+      "name": "windows_temp",
+      "paths": [
+        "%TEMP%\\*",
+        "C:\\Windows\\Temp\\*"
+      ]
+    },
+    {
+      "name": "browser_caches",
+      "paths": [
+        "%LOCALAPPDATA%\\Google\\Chrome\\User Data\\Default\\Cache\\*",
+        "%LOCALAPPDATA%\\Microsoft\\Edge\\User Data\\Default\\Cache\\*",
+        "%LOCALAPPDATA%\\Mozilla\\Firefox\\Profiles\\*\\cache2\\*"
+      ]
+    },
+    {
+      "name": "prefetch_safe",
+      "paths": [
+        "C:\\Windows\\Prefetch\\*.pf"
+      ]
+    }
+  ],
+  "exclusions": [
+    "*.lock",
+    "*.tmp"
+  ]
+}

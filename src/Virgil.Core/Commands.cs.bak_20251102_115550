@@ -1,0 +1,24 @@
+using System.Text.Json.Serialization;
+
+namespace Virgil.Core
+{
+    // Types de commande supportés par l'Agent (numériques pour l'IPC)
+    public enum CommandType
+    {
+        CleanAll = 0,
+        UpdateAll = 1
+    }
+
+    // Requête écrite par le client dans C:\ProgramData\Virgil\ipc\commands\<id>.json
+    public record CommandRequest(
+        string Id,
+        CommandType Type
+    );
+
+    // Réponse écrite par l’Agent dans <id>.result.json
+    public record CommandResponse(
+        bool Success,
+        string Kind,
+        string Message
+    );
+}

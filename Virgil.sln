@@ -1,0 +1,61 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.0.31903.59
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{AE9F00D6-3671-4384-940D-84BED6A2997E}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Virgil.Agent", "src\Virgil.Agent\Virgil.Agent.csproj", "{533C831D-1516-428E-8809-14D9689E9EF8}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Virgil.CLI", "src\Virgil.CLI\Virgil.CLI.csproj", "{60A0A79B-461A-472B-B2E5-E1AF01CE8DFB}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Virgil.Core", "src\Virgil.Core\Virgil.Core.csproj", "{3B0CDF14-209E-4ADC-B63C-8BD48819901A}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Virgil.Tests", "src\Virgil.Tests\Virgil.Tests.csproj", "{132D84A9-2285-4354-9381-0D60AED205E7}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Virgil.UI", "src\Virgil.UI\Virgil.UI.csproj", "{05C2A49F-FBC6-44FA-882D-D7CA271CE3E8}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WpfProbe", "WpfProbe\WpfProbe.csproj", "{7752ABAA-55B7-49EC-88FA-4A71443CF695}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{533C831D-1516-428E-8809-14D9689E9EF8}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{533C831D-1516-428E-8809-14D9689E9EF8}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{533C831D-1516-428E-8809-14D9689E9EF8}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{533C831D-1516-428E-8809-14D9689E9EF8}.Release|Any CPU.Build.0 = Release|Any CPU
+		{60A0A79B-461A-472B-B2E5-E1AF01CE8DFB}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{60A0A79B-461A-472B-B2E5-E1AF01CE8DFB}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{60A0A79B-461A-472B-B2E5-E1AF01CE8DFB}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{60A0A79B-461A-472B-B2E5-E1AF01CE8DFB}.Release|Any CPU.Build.0 = Release|Any CPU
+		{3B0CDF14-209E-4ADC-B63C-8BD48819901A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{3B0CDF14-209E-4ADC-B63C-8BD48819901A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{3B0CDF14-209E-4ADC-B63C-8BD48819901A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{3B0CDF14-209E-4ADC-B63C-8BD48819901A}.Release|Any CPU.Build.0 = Release|Any CPU
+		{132D84A9-2285-4354-9381-0D60AED205E7}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{132D84A9-2285-4354-9381-0D60AED205E7}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{132D84A9-2285-4354-9381-0D60AED205E7}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{132D84A9-2285-4354-9381-0D60AED205E7}.Release|Any CPU.Build.0 = Release|Any CPU
+		{05C2A49F-FBC6-44FA-882D-D7CA271CE3E8}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{05C2A49F-FBC6-44FA-882D-D7CA271CE3E8}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{05C2A49F-FBC6-44FA-882D-D7CA271CE3E8}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{05C2A49F-FBC6-44FA-882D-D7CA271CE3E8}.Release|Any CPU.Build.0 = Release|Any CPU
+		{7752ABAA-55B7-49EC-88FA-4A71443CF695}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{7752ABAA-55B7-49EC-88FA-4A71443CF695}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{7752ABAA-55B7-49EC-88FA-4A71443CF695}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{7752ABAA-55B7-49EC-88FA-4A71443CF695}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{533C831D-1516-428E-8809-14D9689E9EF8} = {AE9F00D6-3671-4384-940D-84BED6A2997E}
+		{60A0A79B-461A-472B-B2E5-E1AF01CE8DFB} = {AE9F00D6-3671-4384-940D-84BED6A2997E}
+		{3B0CDF14-209E-4ADC-B63C-8BD48819901A} = {AE9F00D6-3671-4384-940D-84BED6A2997E}
+		{132D84A9-2285-4354-9381-0D60AED205E7} = {AE9F00D6-3671-4384-940D-84BED6A2997E}
+		{05C2A49F-FBC6-44FA-882D-D7CA271CE3E8} = {AE9F00D6-3671-4384-940D-84BED6A2997E}
+	EndGlobalSection
+EndGlobal

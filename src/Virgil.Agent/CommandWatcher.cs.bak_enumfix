@@ -1,0 +1,138 @@
+using System;
+using System.IO;
+using System.Text.Json;
+using System.Threading;
+using System.Threading.Tasks;
+using Virgil.Core;
+
+public interface IEventSink { void Info(string msg); void Error(string msg, Exception? ex = null); }
+public sealed class NoopEvents : IEventSink { public void Info(string msg) { } public void Error(string msg, Exception? ex = null) { } }
+
+public class CommandWatcher
+{
+    private readonly string _baseDir;
+    private readonly string _cmdDir;
+    private readonly IEventSink _events;
+    private volatile bool _running;
+
+    public CommandWatcher(string baseDir, IEventSink events)
+    {
+        _baseDir = baseDir;
+        _cmdDir  = Path.Combine(_baseDir, "ipc", "commands");
+        Directory.CreateDirectory(_cmdDir);
+        _events = events ?? new NoopEvents();
+    }
+
+    public void Start()
+    {
+        _running = true;
+        Task.Run(async () =>
+        {
+            _events.Info($"Command watcher started: {_cmdDir}");
+            while (_running)
+            {
+                try
+                {
+                    foreach (var file in Directory.EnumerateFiles(_cmdDir, "*.json"))
+                    {
+                        // On ignore explicitement les fichiers de résultat déjà produits (exactement ".result.json")
+                        if (file.EndsWith(".result.json", StringComparison.OrdinalIgnoreCase))
+                            continue;
+
+                        string json = File.ReadAllText(file);
+
+                        // Lecture tolérante : on ne désérialise pas directement dans CommandRequest pour gérer un 'Type' flexible
+                        using var doc = JsonDocument.Parse(json);
+                        var root = doc.RootElement;
+
+                        // id
+                        string id = root.TryGetProperty("Id", out var idProp) && idProp.ValueKind == JsonValueKind.String
+                            ? idProp.GetString() ?? Guid.NewGuid().ToString("N")
+                            : Guid.NewGuid().ToString("N");
+
+                        // type
+                        CommandType typeVal;
+                        if (!root.TryGetProperty("Type", out var typeProp))
+                        {
+                            _events.Error($"Bad command file {file}: missing Type");
+                            SafeDelete(file);
+                            continue;
+                        }
+
+                        if (typeProp.ValueKind == JsonValueKind.Number && typeProp.TryGetInt32(out var enumInt))
+                        {
+                            typeVal = (CommandType)enumInt;
+                        }
+                        else
+                        {
+                            var raw = typeProp.GetString() ?? "";
+                            // Essai direct (insensible à la casse) sur les noms d'enum réels du projet
+                            if (!Enum.TryParse<CommandType>(raw, true, out typeVal))
+                            {
+                                // Synonymes courants acceptés
+                                switch (raw.Trim().Replace("-", "").Replace("_", "").ToLowerInvariant())
+                                {
+                                    case "clean":
+                                    case "cleanup":
+                                    case "cleanall":
+                                        if (!Enum.TryParse<CommandType>("CleanAll", true, out typeVal) &&
+                                            !Enum.TryParse<CommandType>("Clean",    true, out typeVal))
+                                        {
+                                            _events.Error($"Unknown command Type '{raw}' in {file}");
+                                            SafeDelete(file);
+                                            continue;
+                                        }
+                                        break;
+
+                                    case "update":
+                                    case "updateall":
+                                        if (!Enum.TryParse<CommandType>("UpdateAll", true, out typeVal) &&
+                                            !Enum.TryParse<CommandType>("Update",    true, out typeVal))
+                                        {
+                                            _events.Error($"Unknown command Type '{raw}' in {file}");
+                                            SafeDelete(file);
+                                            continue;
+                                        }
+                                        break;
+
+                                    default:
+                                        _events.Error($"Unknown command Type '{raw}' in {file}");
+                                        SafeDelete(file);
+                                        continue;
+                                }
+                            }
+                        }
+
+                        var req = new CommandRequest(id, typeVal);
+
+                        // ======= ICI tu exécutes la commande (appel à tes managers) =======
+                        // Pour garder le comportement actuel, on ne fait que simuler un OK.
+                        bool success = true;
+                        string message = $"Executed {req.Type} (id={req.Id})";
+
+                        var resp = new CommandResponse(success, req.Type.ToString(), message);
+
+                        // Chemin de sortie : exactement "<id>.result.json" (pas d'empilement)
+                        var resultPath = Path.Combine(_cmdDir, req.Id + ".result.json");
+                        var outJson = JsonSerializer.Serialize(resp, new JsonSerializerOptions { WriteIndented = false });
+                        File.WriteAllText(resultPath, outJson);
+
+                        // Commande consommée
+                        SafeDelete(file);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    _events.Error("Command polling error", ex);
+                }
+
+                await Task.Delay(1000).ConfigureAwait(false);
+            }
+        });
+    }
+
+    private static void SafeDelete(string path)
+    {
+        try { File.Delete(path); } catch { /* best effort */ }
+    }
+}
