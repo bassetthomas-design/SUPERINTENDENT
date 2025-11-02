@@ -2,9 +2,13 @@
   <ItemGroup>
     <ProjectReference Include="..\Virgil.Core\Virgil.Core.csproj" />
     <ProjectReference Include="C:\Dev\VirgilOps\src\Virgil.Core\Virgil.Core.csproj" />
+    <Content Include="Assets\phrases.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.0" />
+    <PackageReference Include="System.Management" Version="9.0.10" />
   </ItemGroup>
   <PropertyGroup>
     <OutputType>WinExe</OutputType>
